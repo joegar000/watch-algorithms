@@ -1,21 +1,18 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Column } from "./columns";
 import { WatchBar } from "./interactions";
-import { generateNumbers } from "./algorithms";
+import { SortingRes, generateNumbers } from "./algorithms";
 
-export function Sort({ count = 100, sort }: { count?: number, sort: (n: number[]) => Generator<number[], void, unknown> }) {
+export const SortableColumns = createContext<[{ left: number, right: number }, React.MutableRefObject<HTMLElement | null>[]] | null>(null);
+/** Step duration in 'ms' */
+export const STEP_DURATION = 200;
+
+export function Sort({ count = 100, sort }: { count?: number, sort: (n: number[]) => SortingRes }) {
   const [playing, setPlaying] = useState(false);
   const [historyIndex, setHistoryIndex] = useState(0);
   const history = useMemo(() => {
     const numbers = generateNumbers(count);
-    const result: number[][] = [];
-    let steps = sort(numbers);
-    let next = steps.next();
-    while (!next.done) {
-      result.push(next.value);
-      next = steps.next();
-    }
-    return result;
+    return [...sort(numbers.slice())];
   }, [count, sort]);
   const nums = history[historyIndex];
 
@@ -24,7 +21,7 @@ export function Sort({ count = 100, sort }: { count?: number, sort: (n: number[]
       const t = setTimeout(() => {
         if (historyIndex < history.length - 1)
           setHistoryIndex(historyIndex + 1);
-      }, 10);
+      }, STEP_DURATION + 100);
       return () => clearTimeout(t);
     }
   }, [playing, nums]);
@@ -34,10 +31,15 @@ export function Sort({ count = 100, sort }: { count?: number, sort: (n: number[]
   return (
     <div className="h-100 d-flex flex-column">
       <div className="d-flex flex-fill align-items-end pt-5">
-        {nums?.map(n => {
-          return <Column key={unit * n} height={unit * n} />;
+        {nums.nums.map(n => {
+          return <Column key={unit * n} comparing={nums.comparing} value={unit * n} />;
         })}
       </div>
+      <input type="range" min={0} max={history.length - 1} value={historyIndex} step={1}
+        onChange={e => {
+          setHistoryIndex(Number(e.target.value));
+        }}
+      />
       <WatchBar
         playing={playing}
         onLeft={() => {

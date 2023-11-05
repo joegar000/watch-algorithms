@@ -1,5 +1,5 @@
 import './App.css';
-import { bubbleSort } from './algorithms/algorithms';
+import { bubbleSort, mergeSort } from './algorithms/algorithms';
 import { Sort } from './algorithms/sort';
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
           <Nav />
         </div>
         <div className="row flex-fill">
-          <Sort sort={bubbleSort} />
+          <Sort sort={mergeSort} />
         </div>
       </div>
     </div>
