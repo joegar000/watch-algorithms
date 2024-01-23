@@ -1,19 +1,31 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Column } from "./columns";
-import { WatchBar } from "./interactions";
-import { SortingRes, generateNumbers } from "./algorithms";
+import React, { createContext, useEffect, useMemo, useState } from "react";
+import { WatchBar } from "../interactions";
+import { mergeSort } from "./sort";
+import generateNumbers from "../../utilities/generate-numbers";
+
+export function Column(props: { value: number, comparing: { left: number, right: number } | null }) {
+  const height = `${props.value}%`;
+  const isComparing = props.comparing && (props.comparing.left === props.value || props.comparing.right === props.value);
+
+  return (
+    <div
+      className={`flex-fill ${isComparing ? 'bg-danger' : 'bg-info'} border border-light`}
+      style={{ height }}
+    />
+  );
+}
 
 export const SortableColumns = createContext<[{ left: number, right: number }, React.MutableRefObject<HTMLElement | null>[]] | null>(null);
 /** Step duration in 'ms' */
 export const STEP_DURATION = 200;
 
-export function Sort({ count = 100, sort }: { count?: number, sort: (n: number[]) => SortingRes }) {
+export function MergeSort({ count = 100 }: { count?: number }) {
   const [playing, setPlaying] = useState(false);
   const [historyIndex, setHistoryIndex] = useState(0);
   const history = useMemo(() => {
     const numbers = generateNumbers(count);
-    return [...sort(numbers.slice())];
-  }, [count, sort]);
+    return [...mergeSort(numbers.slice())];
+  }, [count]);
   const nums = history[historyIndex];
 
   useEffect(() => {
@@ -35,7 +47,7 @@ export function Sort({ count = 100, sort }: { count?: number, sort: (n: number[]
           return <Column key={unit * n} comparing={nums.comparing} value={unit * n} />;
         })}
       </div>
-      <input type="range" min={0} max={history.length - 1} value={historyIndex} step={1}
+      <input type="range" className="form-range" min={0} max={history.length - 1} value={historyIndex} step={1}
         onChange={e => {
           setHistoryIndex(Number(e.target.value));
         }}
@@ -51,7 +63,12 @@ export function Sort({ count = 100, sort }: { count?: number, sort: (n: number[]
             setHistoryIndex(historyIndex + 1);
         }}
         onPlayPause={() => {
-          setPlaying(!playing);
+          if (historyIndex === history.length - 1) {
+            setHistoryIndex(0);
+            setPlaying(true);
+          }
+          else
+            setPlaying(!playing);
         }}
       />
     </div>

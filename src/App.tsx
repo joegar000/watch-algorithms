@@ -1,6 +1,7 @@
 import './App.css';
-import { bubbleSort, mergeSort } from './algorithms/algorithms';
-import { Sort } from './algorithms/sort';
+import { MergeSort } from './algorithms/merge-sort/components';
+import { BubbleSort } from './algorithms/bubble-sort/components';
+import { Link, Route, Routes } from 'react-router-dom';
 
 function App() {
   return (
@@ -10,7 +11,11 @@ function App() {
           <Nav />
         </div>
         <div className="row flex-fill">
-          <Sort sort={mergeSort} />
+          <Routes>
+            <Route path="/" element={<div />} />
+            <Route path="/bubble-sort" element={<BubbleSort />} />
+            <Route path="/merge-sort" element={<MergeSort />} />
+          </Routes>
         </div>
       </div>
     </div>
@@ -19,22 +24,21 @@ function App() {
 
 function Nav() {
   return (
-    <nav className="navbar navbar-expand-lg bg-body-tertiary border border-dark">
+    <nav className="navbar navbar-expand-lg bg-body-tertiary shadow-lg rounded-bottom-3">
       <div className="container-fluid">
-        <a className="navbar-brand" href="#">Navbar</a>
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span className="navbar-toggler-icon"></span>
         </button>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav">
             <li className="nav-item">
-              <a className="nav-link active" aria-current="page" href="#">Home</a>
+              <Link to="/" className="nav-link active" aria-current="page">Home</Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#">Features</a>
+              <Link to="/merge-sort" className="nav-link">Merge Sort</Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#">Pricing</a>
+              <Link to="/bubble-sort" className="nav-link">Bubble Sort</Link>
             </li>
           </ul>
         </div>

@@ -1,15 +1,3 @@
-
-export function generateNumbers(numCount: number) {
-  const nums: number[] = [];
-  for (let x = 0; x < numCount; x++) {
-    let num = Math.ceil(Math.random() * numCount);
-    while (nums.includes(num))
-      num = Math.ceil(Math.random() * numCount);
-    nums.push(num);
-  }
-  return nums;
-};
-
 export type SortingRes = Generator<{ comparing: { left: number, right: number } | null, nums: number[] }>
 export function* bubbleSort(arr: number[]): SortingRes {
   let i, j;
