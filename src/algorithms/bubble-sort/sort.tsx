@@ -11,9 +11,9 @@ export function last<T>(arr: T[]): T {
 }
 
 export function bubbleSort(arr: number[]): BubbleState[][] {
-  const bubbleStates: BubbleState[][] = [arr.map((v, i) => ({
+  const bubbleStates: BubbleState[][] = [arr.map(v => ({
     value: v,
-    offset: i,
+    offset: 0,
     comparing: false
   }))];
 

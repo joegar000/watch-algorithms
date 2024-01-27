@@ -1,81 +1,112 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WatchBar } from "../interactions";
 import { bubbleSort, BubbleState } from "./sort";
 import generateNumbers from "../../utilities/generate-numbers";
+import "./styles.css";
 
 /** Step duration in 'ms' */
 export const STEP_DURATION = 200;
 
-export function Column(props: BubbleState & { totalCount: number }) {
+export function Column(props: BubbleState & { totalCount: number, speed: number }) {
   const height = useMemo(() => {
     return `${props.value * (100 / props.totalCount)}%`;
   }, [props.value, props.totalCount]);
-
-  const [width, setWidth] = useState(`${100 / props.totalCount}%`);
-
-  useEffect(() => {
-    setWidth(`${100 / props.totalCount}%`);
+  const width = useMemo(() => {
+    return `${100 / props.totalCount}%`;
   }, [props.totalCount]);
+
 
   const transform = `translateX(${100 * props.offset}%)`;
   const transition = `transform ${STEP_DURATION}ms`;
   return (
     <div
-      ref={(div) => div && setWidth(`${div.offsetWidth}px`)}
-      className={`flex-fill ${props.comparing ? 'bg-danger' : 'bg-info'} border border-light position-absolute`}
+      className={`flex-fill ${props.comparing ? 'bg-danger' : 'bg-info'} border border-light position-relative`}
       style={{ height, transform, transition, width }}
     />
   );
 }
 
-export function BubbleSort({ count = 200 }: { count?: number }) {
+export function BubbleSort() {
+  const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [historyIndex, setHistoryIndex] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const [count, setCount] = useState(50);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const history = useMemo(() => {
+    setIndex(0);
     return bubbleSort(generateNumbers(count));
   }, [count]);
 
   useEffect(() => {
     if (playing) {
       const t = setTimeout(() => {
-        if (historyIndex < history.length - 1)
-          setHistoryIndex(historyIndex + 1);
-      }, STEP_DURATION + 100);
+        if (index < history.length - 1)
+          setIndex(index + 1);
+        else
+          setPlaying(false);
+      }, STEP_DURATION / (speed === 100 ? 0 : speed));
       return () => clearTimeout(t);
     }
-  }, [playing, historyIndex]);
+  }, [playing, count, index, speed]);
+
+  useEffect(() => {
+    const closeSettings = (e: MouseEvent) => {
+      if (!(e.target instanceof HTMLElement) || !e.target.closest('.settings-container'))
+        setSettingsOpen(false);
+    };
+    document.addEventListener('click', closeSettings);
+    return () => document.removeEventListener('click', closeSettings);
+  }, []);
 
   return (
     <div className="h-100 d-flex flex-column">
       <div className="d-flex flex-fill align-items-end pt-5 position-relative">
-        {history[historyIndex].map((state) => {
-          return <Column key={state.value} {...state} totalCount={count} />
+        {history[index]?.map((state) => {
+          return <Column key={state.value} {...state} totalCount={count} speed={speed} />
         })}
       </div>
-      <input type="range" className="form-range" min={0} max={history.length - 1} value={historyIndex} step={1}
-        onChange={e => {
-          setHistoryIndex(Number(e.target.value));
-        }}
+      <input type="range" className="form-range" min={0} max={history.length - 1} value={index} step={1}
+        onChange={e => setIndex(Number(e.target.value))}
       />
-      <WatchBar
-        playing={playing}
-        onLeft={() => {
-          if (historyIndex > 0)
-            setHistoryIndex(historyIndex - 1);
-        }}
-        onRight={() => {
-          if (historyIndex < history.length - 1)
-            setHistoryIndex(historyIndex + 1);
-        }}
-        onPlayPause={() => {
-          if (historyIndex === history.length - 1) {
-            setHistoryIndex(0);
-            setPlaying(true);
-          }
-          else
-            setPlaying(!playing);
-        }}
-      />
+      <div className="d-flex w-100">
+        <div className="w-100">
+          <WatchBar
+            playing={playing}
+            onLeft={() => {
+              if (index > 0)
+                setIndex(index - 1);
+            }}
+            onRight={() => {
+              if (index < history.length - 1)
+                setIndex(index + 1);
+            }}
+            onPlayPause={() => {
+              if (index === history.length - 1) {
+                setIndex(0);
+                setPlaying(true);
+              }
+              else
+                setPlaying(!playing);
+            }}
+          />
+        </div>
+        <div className="float-end position-relative settings-container">
+          <div className={`form-group position-absolute end-0 bg-body border shadow rounded-3 py-3 px-4${settingsOpen ? '' : ' d-none'}`} style={{ bottom: "100%" }}>
+            <div className="row">
+              <label htmlFor="speedSetting" className="form-label">Speed</label>
+              <input type="range" id="speedSetting" className="form-range w-auto" max="100" min="1" step="0.1" value={speed} onChange={e => setSpeed(Number(e.target.value))} />
+            </div>
+            <div className="row">
+              <label htmlFor="colCount" className="form-label">Columns</label>
+              <input type="number" id="colCount" className="form-control" max="100" min="1" value={count} onChange={e => setCount(Number(e.target.value))} />
+            </div>
+          </div>
+          <div className={`position-absolute end-0 ${settingsOpen ? 'settings-open' : 'settings'}`} onClick={() => setSettingsOpen(!settingsOpen)}>
+            <i className={`bi bi-${settingsOpen ? 'gear-fill' : 'gear'}`} style={{ fontSize: '2em' }} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

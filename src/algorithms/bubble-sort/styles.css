@@ -1,0 +1,12 @@
+.settings {
+  transition: transform 1s;
+}
+
+.settings:hover {
+  transform: rotate(90deg);
+}
+
+.settings-open {
+  transition: transform 1s;
+  transform: rotate(90deg);
+}
