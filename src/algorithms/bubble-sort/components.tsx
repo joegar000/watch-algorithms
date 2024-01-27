@@ -74,12 +74,18 @@ export function BubbleSort() {
           <WatchBar
             playing={playing}
             onLeft={() => {
-              if (index > 0)
+              if (index > 0 && !playing) {
                 setIndex(index - 1);
+              } else {
+                setSpeed(Math.max(1, speed - 5));
+              }
             }}
             onRight={() => {
-              if (index < history.length - 1)
+              if (index < history.length - 1 && !playing) {
                 setIndex(index + 1);
+              } else {
+                setSpeed(Math.min(100, speed + 5));
+              }
             }}
             onPlayPause={() => {
               if (index === history.length - 1) {
