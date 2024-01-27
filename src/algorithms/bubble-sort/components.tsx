@@ -20,7 +20,7 @@ export function Column(props: BubbleState & { totalCount: number, speed: number 
   const transition = `transform ${STEP_DURATION}ms`;
   return (
     <div
-      className={`flex-fill ${props.comparing ? 'bg-danger' : 'bg-info'} border border-light position-relative`}
+      className={`flex-fill ${props.comparing ? 'bg-danger' : 'bg-info'} border position-relative`}
       style={{ height, transform, transition, width }}
     />
   );
@@ -32,11 +32,12 @@ export function BubbleSort() {
   const [speed, setSpeed] = useState(1);
   const [count, setCount] = useState(50);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [history, setHistory] = useState(() => bubbleSort(generateNumbers(count)));
 
-  const history = useMemo(() => {
+  if (count !== history[0]?.length) {
     setIndex(0);
-    return bubbleSort(generateNumbers(count));
-  }, [count]);
+    setHistory(bubbleSort(generateNumbers(count)))
+  }
 
   useEffect(() => {
     if (playing) {
@@ -77,7 +78,7 @@ export function BubbleSort() {
               if (index > 0 && !playing) {
                 setIndex(index - 1);
               } else {
-                setSpeed(Math.max(1, speed - 5));
+                setSpeed(Math.min(1, speed - 5));
               }
             }}
             onRight={() => {
@@ -100,12 +101,20 @@ export function BubbleSort() {
         <div className="float-end position-relative settings-container">
           <div className={`form-group position-absolute end-0 bg-body border shadow rounded-3 py-3 px-4${settingsOpen ? '' : ' d-none'}`} style={{ bottom: "100%" }}>
             <div className="row">
-              <label htmlFor="speedSetting" className="form-label">Speed</label>
-              <input type="range" id="speedSetting" className="form-range w-auto" max="100" min="1" step="0.1" value={speed} onChange={e => setSpeed(Number(e.target.value))} />
+              <label htmlFor="speed-setting" className="form-label">Speed</label>
+              <input type="range" id="speed-setting" className="form-range w-auto" max="100" min="1" step="0.1" value={speed} onChange={e => setSpeed(Number(e.target.value))} />
             </div>
-            <div className="row">
+            <div className="row border-top mt-2">
               <label htmlFor="colCount" className="form-label">Columns</label>
-              <input type="number" id="colCount" className="form-control" max="100" min="1" value={count} onChange={e => setCount(Number(e.target.value))} />
+              <input type="number" id="col-count" className="form-control" max="100" min="2" value={count} onChange={e => setCount(Number(e.target.value))} />
+            </div>
+            <div className="row border-top mt-2">
+              <label htmlFor="reset-btn" className="form-label">
+                Regenerate
+                </label>
+              <button className="btn btn-outline-secondary w-auto" id="reset-btn"onClick={() => setHistory(bubbleSort(generateNumbers(count)))}>
+                <i className="bi bi-arrow-clockwise" />
+              </button>
             </div>
           </div>
           <div className={`position-absolute end-0 ${settingsOpen ? 'settings-open' : 'settings'}`} onClick={() => setSettingsOpen(!settingsOpen)}>
