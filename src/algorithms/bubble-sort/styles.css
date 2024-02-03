@@ -10,3 +10,17 @@
   transition: transform 1s;
   transform: rotate(90deg);
 }
+
+body {
+  --bubble-offset: none;
+}
+
+.bubble-sort-column {
+  transform: var(--bubble-offset);
+  will-change: transform;
+  -webkit-transform: var(--bubble-offset);
+  -ms-transform: var(--bubble-offset);
+  -moz-transform: var(--bubble-offset);
+  -o-transfrom: var(--bubble-offset);
+}
+

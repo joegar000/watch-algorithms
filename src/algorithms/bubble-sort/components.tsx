@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { WatchBar } from "../interactions";
 import { bubbleSort, BubbleState } from "./sort";
 import generateNumbers from "../../utilities/generate-numbers";
@@ -8,21 +8,36 @@ import "./styles.css";
 export const STEP_DURATION = 200;
 
 export function Column(props: BubbleState & { totalCount: number, speed: number }) {
-  const height = useMemo(() => {
-    return `${props.value * (100 / props.totalCount)}%`;
-  }, [props.value, props.totalCount]);
-  const width = useMemo(() => {
-    return `${100 / props.totalCount}%`;
-  }, [props.totalCount]);
+  const height = useMemo(() => `${props.value * (100 / props.totalCount)}%`, [props.value, props.totalCount]);
+  const width = useMemo(() => `${100 / props.totalCount}%`, [props.totalCount]);
+  const [pixelWidth, setPixelWidth] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    if (ref.current) {
+      setPixelWidth(ref.current.getBoundingClientRect().width);
+      const o = new ResizeObserver(() => setPixelWidth(ref.current?.getBoundingClientRect().width ?? null));
+      o.observe(ref.current);
+      return () => o.disconnect();
+    }
+  }, []);
 
-  const transform = `translateX(${100 * props.offset}%)`;
+  const translate = pixelWidth !== null ? `${props.offset * pixelWidth}px` : `${100 * props.offset}%`;
   const transition = `transform ${STEP_DURATION}ms`;
   return (
     <div
-      className={`flex-fill ${props.comparing ? 'bg-danger' : 'bg-info'} border position-relative`}
-      style={{ height, transform, transition, width }}
-    />
+      style={{
+        // @ts-ignore
+        '--bubble-offset': `translateX(${translate})`,
+        width,
+        height
+      }}
+    >
+      <div className={`bubble-sort-column flex-fill ${props.comparing ? 'bg-danger' : 'bg-info'} border position-relative h-100 w-100`}
+        style={{ transition }}
+        ref={ref}
+      />
+    </div>
   );
 }
 
