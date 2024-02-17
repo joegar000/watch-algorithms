@@ -6,10 +6,15 @@ import "./styles/controls.css";
 import { Sortable } from "./sortable";
 
 
-export function SortControls(props: { stepDuration?: number, algorithm: (nums: number[]) => ColumnSortProps[][] }) {
+export function SortControls(props: {
+  stepDuration?: number,
+  algorithm: (nums: number[]) => ColumnSortProps[][],
+  startPlaying?: boolean,
+  defaultSpeed?: number
+}) {
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  const [playing, setPlaying] = useState(props.startPlaying ?? false);
+  const [speed, setSpeed] = useState(props.defaultSpeed !== undefined ? Math.min(props.defaultSpeed, 100) : 1);
   const [count, setCount] = useState(50);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [triggerRegen, setTriggerRegen] = useState(false);

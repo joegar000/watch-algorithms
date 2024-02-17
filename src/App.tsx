@@ -3,6 +3,7 @@ import { Link, Route, Routes } from 'react-router-dom';
 import { SortControls } from './components/controls';
 import { bubbleSort } from './algorithms/bubble';
 import { mergeSort } from './algorithms/merge';
+import { Welcome } from './components/welcome';
 
 function App() {
   return (
@@ -13,7 +14,7 @@ function App() {
         </div>
         <div className="row flex-fill">
           <Routes>
-            <Route path="/" element={<div />} />
+            <Route path="/" element={<Welcome />} />
             <Route path="/bubble-sort" element={<SortControls key="bubble" algorithm={bubbleSort} />} />
             <Route path="/merge-sort" element={<SortControls key="merge" algorithm={mergeSort} />} />
           </Routes>
@@ -25,7 +26,7 @@ function App() {
 
 function Nav() {
   return (
-    <nav className="navbar navbar-expand-lg bg-body-tertiary shadow-lg rounded-bottom-3">
+    <nav className="navbar navbar-expand-lg bg-body-tertiary shadow rounded-bottom-3">
       <div className="container-fluid">
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span className="navbar-toggler-icon"></span>
