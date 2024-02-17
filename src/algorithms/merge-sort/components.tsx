@@ -1,76 +1,131 @@
-import React, { createContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { WatchBar } from "../interactions";
-import { mergeSort } from "./sort";
+import { mergeSort, MergeState } from "./sort";
 import generateNumbers from "../../utilities/generate-numbers";
+import "./styles.css";
 
-export function Column(props: { value: number, comparing: { left: number, right: number } | null }) {
-  const height = `${props.value}%`;
-  const isComparing = props.comparing && (props.comparing.left === props.value || props.comparing.right === props.value);
-
-  return (
-    <div
-      className={`flex-fill ${isComparing ? 'bg-danger' : 'bg-info'} border border-light`}
-      style={{ height }}
-    />
-  );
-}
-
-export const SortableColumns = createContext<[{ left: number, right: number }, React.MutableRefObject<HTMLElement | null>[]] | null>(null);
 /** Step duration in 'ms' */
 export const STEP_DURATION = 200;
 
-export function MergeSort({ count = 100 }: { count?: number }) {
+export function Column(props: MergeState & { totalCount: number, speed: number }) {
+  const height = useMemo(() => `${props.value * (100 / props.totalCount)}%`, [props.value, props.totalCount]);
+  const width = useMemo(() => `${100 / props.totalCount}%`, [props.totalCount]);
+  const [pixelWidth, setPixelWidth] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      setPixelWidth(ref.current.getBoundingClientRect().width);
+      const o = new ResizeObserver(() => setPixelWidth(ref.current?.getBoundingClientRect().width ?? null));
+      o.observe(ref.current);
+      return () => o.disconnect();
+    }
+  }, []);
+
+  const translate = pixelWidth !== null ? `${props.offset * pixelWidth}px` : `${100 * props.offset}%`;
+  const transition = `transform ${STEP_DURATION}ms`;
+  const comparingClass = props.comparing ? 'bg-danger' : (props.toCompare ? 'bg-warning' : 'bg-info');
+  return (
+    <div
+      style={{
+        // @ts-ignore
+        '--merge-offset': `translateX(${translate})`,
+        width,
+        height
+      }}
+    >
+      <div className={`merge-sort-column flex-fill ${comparingClass} border position-relative h-100 w-100`}
+        style={{ transition }}
+        ref={ref}
+      />
+    </div>
+  );
+}
+
+export function MergeSort() {
+  const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [historyIndex, setHistoryIndex] = useState(0);
-  const history = useMemo(() => {
-    const numbers = generateNumbers(count);
-    return [...mergeSort(numbers.slice())];
-  }, [count]);
-  const nums = history[historyIndex];
+  const [speed, setSpeed] = useState(1);
+  const [count, setCount] = useState(50);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [history, setHistory] = useState(() => mergeSort(generateNumbers(count)));
 
   useEffect(() => {
     if (playing) {
       const t = setTimeout(() => {
-        if (historyIndex < history.length - 1)
-          setHistoryIndex(historyIndex + 1);
-      }, STEP_DURATION + 100);
+        if (index < history.length - 1)
+          setIndex(index + 1);
+        else
+          setPlaying(false);
+      }, STEP_DURATION / (speed === 100 ? 0 : speed));
       return () => clearTimeout(t);
     }
-  }, [playing, nums]);
-
-  const unit = 100 / count;
+  }, [playing, count, index, speed]);
 
   return (
     <div className="h-100 d-flex flex-column">
       <div className="d-flex flex-fill align-items-end pt-5">
-        {nums.nums.map(n => {
-          return <Column key={unit * n} comparing={nums.comparing} value={unit * n} />;
+        {history[index]?.map((state) => {
+          return <Column key={state.value} {...state} totalCount={count} speed={speed} />
         })}
       </div>
-      <input type="range" className="form-range" min={0} max={history.length - 1} value={historyIndex} step={1}
+      <input type="range" className="form-range" min={0} max={history.length - 1} value={index} step={1}
         onChange={e => {
-          setHistoryIndex(Number(e.target.value));
+          setIndex(Number(e.target.value));
         }}
       />
-      <WatchBar
-        playing={playing}
-        onLeft={() => {
-          if (historyIndex > 0)
-            setHistoryIndex(historyIndex - 1);
-        }}
-        onRight={() => {
-          if (historyIndex < history.length - 1)
-            setHistoryIndex(historyIndex + 1);
-        }}
-        onPlayPause={() => {
-          if (historyIndex === history.length - 1) {
-            setHistoryIndex(0);
-            setPlaying(true);
-          }
-          else
-            setPlaying(!playing);
-        }}
-      />
+      <div className="d-flex w-100">
+        <div className="w-100">
+          <WatchBar
+            playing={playing}
+            onLeft={() => {
+              if (index > 0 && !playing) {
+                setIndex(index - 1);
+              } else {
+                setSpeed(Math.min(1, speed - 5));
+              }
+            }}
+            onRight={() => {
+              if (index < history.length - 1 && !playing) {
+                setIndex(index + 1);
+              } else {
+                setSpeed(Math.min(100, speed + 5));
+              }
+            }}
+            onPlayPause={() => {
+              if (index === history.length - 1) {
+                setIndex(0);
+                setPlaying(true);
+              }
+              else
+                setPlaying(!playing);
+            }}
+          />
+        </div>
+        <div className="float-end position-relative settings-container">
+          <div className={`form-group position-absolute end-0 bg-body border shadow rounded-3 py-3 px-4${settingsOpen ? '' : ' d-none'}`} style={{ bottom: "100%" }}>
+            <div className="row">
+              <label htmlFor="speed-setting" className="form-label">Speed</label>
+              <input type="range" id="speed-setting" className="form-range w-auto" max="100" min="1" step="0.1" value={speed} onChange={e => setSpeed(Number(e.target.value))} />
+            </div>
+            <div className="row border-top mt-2">
+              <label htmlFor="colCount" className="form-label">Columns</label>
+              <input type="number" id="col-count" className="form-control" max="100" min="2" value={count} onChange={e => setCount(Number(e.target.value))} />
+            </div>
+            <div className="row border-top mt-2">
+              <label htmlFor="reset-btn" className="form-label">
+                Regenerate
+                </label>
+              <button className="btn btn-outline-secondary w-auto" id="reset-btn"onClick={() => setHistory(mergeSort(generateNumbers(count)))}>
+                <i className="bi bi-arrow-clockwise" />
+              </button>
+            </div>
+          </div>
+          <div className={`position-absolute end-0 ${settingsOpen ? 'settings-open' : 'settings'}`} onClick={() => setSettingsOpen(!settingsOpen)}>
+            <i className={`bi bi-${settingsOpen ? 'gear-fill' : 'gear'}`} style={{ fontSize: '2em' }} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

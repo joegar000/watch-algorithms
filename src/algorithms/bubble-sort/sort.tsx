@@ -1,13 +1,10 @@
 import { produce } from "immer";
+import { last } from "../../utilities/last";
 
 export interface BubbleState {
   value: number,
   offset: number,
   comparing: boolean
-}
-
-export function last<T>(arr: T[]): T {
-  return arr[arr.length - 1];
 }
 
 export function bubbleSort(arr: number[]): BubbleState[][] {
