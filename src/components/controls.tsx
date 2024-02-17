@@ -3,6 +3,7 @@ import generateNumbers from "../utilities/generate-numbers";
 import { Column, ColumnSortProps } from "./column";
 import { WatchBar } from "./watch-bar";
 import "./styles/controls.css";
+import { Sortable } from "./sortable";
 
 
 export function SortControls(props: { stepDuration?: number, algorithm: (nums: number[]) => ColumnSortProps[][] }) {
@@ -29,11 +30,7 @@ export function SortControls(props: { stepDuration?: number, algorithm: (nums: n
 
   return (
     <div className="h-100 d-flex flex-column">
-      <div className="d-flex flex-fill align-items-end pt-5">
-        {history[index]?.map((state) => {
-          return <Column key={state.value} {...state} stepDuration={stepDuration} totalCount={count} speed={speed} />
-        })}
-      </div>
+      <Sortable speed={speed} stepDuration={stepDuration} columns={history[index]} />
       <input type="range" className="form-range" min={0} max={history.length - 1} value={index} step={1}
         onChange={e => {
           setIndex(Number(e.target.value));
@@ -80,7 +77,7 @@ export function SortControls(props: { stepDuration?: number, algorithm: (nums: n
             <div className="row border-top mt-2">
               <label htmlFor="reset-btn" className="form-label">
                 Regenerate
-                </label>
+              </label>
               <button className="btn btn-outline-secondary w-auto" id="reset-btn" onClick={() => setTriggerRegen(!triggerRegen)}>
                 <i className="bi bi-arrow-clockwise" />
               </button>
