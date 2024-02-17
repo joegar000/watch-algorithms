@@ -1,0 +1,13 @@
+body {
+  --sort-offset: none;
+}
+
+.sort-column {
+  transform: var(--sort-offset);
+  will-change: transform;
+  -webkit-transform: var(--sort-offset);
+  -ms-transform: var(--sort-offset);
+  -moz-transform: var(--sort-offset);
+  -o-transfrom: var(--sort-offset);
+}
+

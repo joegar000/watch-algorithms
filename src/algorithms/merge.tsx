@@ -1,19 +1,8 @@
 import { produce } from "immer";
-import { last } from "../../utilities/last";
+import { last } from "../utilities/last";
+import { ColumnSortProps } from "../components/column";
 
-export interface MergeState {
-  value: number,
-  offset: number,
-  comparing: boolean,
-  toCompare: boolean
-}
-
-// JavaScript program for Merge Sort
-
-// Merges two subarrays of arr[].
-// First subarray is arr[l..m]
-// Second subarray is arr[m+1..r]
-function merge(arr: number[], leftIndex: number, middleIndex: number, rightIndex: number, mergeStates: MergeState[][]) {
+function merge(arr: number[], leftIndex: number, middleIndex: number, rightIndex: number, mergeStates: ColumnSortProps[][]) {
   const size1 = middleIndex - leftIndex + 1;
   const size2 = rightIndex - middleIndex;
 
@@ -32,7 +21,7 @@ function merge(arr: number[], leftIndex: number, middleIndex: number, rightIndex
   mergeStates.push(produce(last(mergeStates), draft => {
     for (const v of leftSub.concat(rightSub)) {
       const stateI = last(mergeStates).findIndex(s => s.value === v);
-      draft[stateI].toCompare = true;
+      draft[stateI].background = 'bg-warning';
     }
   }));
   // Merge the temp arrays back into arr[l..r]
@@ -51,8 +40,8 @@ function merge(arr: number[], leftIndex: number, middleIndex: number, rightIndex
     const stateJ = last(mergeStates).findIndex(s => s.value === rightSub[j]);
 
     mergeStates.push(produce(last(mergeStates), draft => {
-      draft[stateI].comparing = true;
-      draft[stateJ].comparing = true;
+      draft[stateI].background = 'bg-danger';
+      draft[stateJ].background = 'bg-danger';
     }));
 
     if (leftSub[i] <= rightSub[j]) {
@@ -82,8 +71,8 @@ function merge(arr: number[], leftIndex: number, middleIndex: number, rightIndex
     k++;
 
     mergeStates.push(produce(last(mergeStates), draft => {
-      draft[stateI].comparing = false;
-      draft[stateJ].comparing = false;
+      draft[stateI].background = 'bg-warning';
+      draft[stateJ].background = 'bg-warning';
     }));
   }
 
@@ -105,12 +94,12 @@ function merge(arr: number[], leftIndex: number, middleIndex: number, rightIndex
 
 
   mergeStates.push(produce(last(mergeStates), draft => {
-    draft.forEach(s => s.toCompare = false);
+    draft.forEach(s => s.background = 'bg-info');
   }));
 }
 
 
-function sort(arr: number[], leftIndex: number, rightIndex: number, mergeStates: MergeState[][]) {
+function sort(arr: number[], leftIndex: number, rightIndex: number, mergeStates: ColumnSortProps[][]) {
   if (leftIndex >= rightIndex) {
     return;
   }
@@ -121,14 +110,12 @@ function sort(arr: number[], leftIndex: number, rightIndex: number, mergeStates:
   merge(arr, leftIndex, m, rightIndex, mergeStates);
 }
 
-export function mergeSort(arr: number[]): MergeState[][] {
+export function mergeSort(arr: number[]): ColumnSortProps[][] {
   const mergeStates = [arr.map(v => ({
     value: v,
     offset: 0,
-    comparing: false,
-    toCompare: false
-  }))];
+    background: 'bg-info'
+  } as const))];
   sort(arr, 0, arr.length - 1, mergeStates);
   return mergeStates;
 }
-

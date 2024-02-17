@@ -1,7 +1,8 @@
 import './App.css';
-import { MergeSort } from './algorithms/merge-sort/components';
-import { BubbleSort } from './algorithms/bubble-sort/components';
 import { Link, Route, Routes } from 'react-router-dom';
+import { SortControls } from './components/controls';
+import { bubbleSort } from './algorithms/bubble';
+import { mergeSort } from './algorithms/merge';
 
 function App() {
   return (
@@ -13,8 +14,8 @@ function App() {
         <div className="row flex-fill">
           <Routes>
             <Route path="/" element={<div />} />
-            <Route path="/bubble-sort" element={<BubbleSort />} />
-            <Route path="/merge-sort" element={<MergeSort />} />
+            <Route path="/bubble-sort" element={<SortControls key="bubble" algorithm={bubbleSort} />} />
+            <Route path="/merge-sort" element={<SortControls key="merge" algorithm={mergeSort} />} />
           </Routes>
         </div>
       </div>

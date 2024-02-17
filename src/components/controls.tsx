@@ -1,54 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { WatchBar } from "../interactions";
-import { mergeSort, MergeState } from "./sort";
-import generateNumbers from "../../utilities/generate-numbers";
-import "./styles.css";
+import { useEffect, useMemo, useState } from "react";
+import generateNumbers from "../utilities/generate-numbers";
+import { Column, ColumnSortProps } from "./column";
+import { WatchBar } from "./watch-bar";
+import "./styles/controls.css";
 
-/** Step duration in 'ms' */
-export const STEP_DURATION = 200;
 
-export function Column(props: MergeState & { totalCount: number, speed: number }) {
-  const height = useMemo(() => `${props.value * (100 / props.totalCount)}%`, [props.value, props.totalCount]);
-  const width = useMemo(() => `${100 / props.totalCount}%`, [props.totalCount]);
-  const [pixelWidth, setPixelWidth] = useState<number | null>(null);
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (ref.current) {
-      setPixelWidth(ref.current.getBoundingClientRect().width);
-      const o = new ResizeObserver(() => setPixelWidth(ref.current?.getBoundingClientRect().width ?? null));
-      o.observe(ref.current);
-      return () => o.disconnect();
-    }
-  }, []);
-
-  const translate = pixelWidth !== null ? `${props.offset * pixelWidth}px` : `${100 * props.offset}%`;
-  const transition = `transform ${STEP_DURATION}ms`;
-  const comparingClass = props.comparing ? 'bg-danger' : (props.toCompare ? 'bg-warning' : 'bg-info');
-  return (
-    <div
-      style={{
-        // @ts-ignore
-        '--merge-offset': `translateX(${translate})`,
-        width,
-        height
-      }}
-    >
-      <div className={`merge-sort-column flex-fill ${comparingClass} border position-relative h-100 w-100`}
-        style={{ transition }}
-        ref={ref}
-      />
-    </div>
-  );
-}
-
-export function MergeSort() {
+export function SortControls(props: { stepDuration?: number, algorithm: (nums: number[]) => ColumnSortProps[][] }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [count, setCount] = useState(50);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [history, setHistory] = useState(() => mergeSort(generateNumbers(count)));
+  const [triggerRegen, setTriggerRegen] = useState(false);
+  const history = useMemo(() => props.algorithm(generateNumbers(count)), [count, props.algorithm, triggerRegen]);
+  const stepDuration = props.stepDuration ?? 200;
 
   useEffect(() => {
     if (playing) {
@@ -57,16 +22,16 @@ export function MergeSort() {
           setIndex(index + 1);
         else
           setPlaying(false);
-      }, STEP_DURATION / (speed === 100 ? 0 : speed));
+      }, (stepDuration ?? 200) / (speed === 100 ? 0 : speed));
       return () => clearTimeout(t);
     }
-  }, [playing, count, index, speed]);
+  }, [playing, count, index, speed, stepDuration]);
 
   return (
     <div className="h-100 d-flex flex-column">
       <div className="d-flex flex-fill align-items-end pt-5">
         {history[index]?.map((state) => {
-          return <Column key={state.value} {...state} totalCount={count} speed={speed} />
+          return <Column key={state.value} {...state} stepDuration={stepDuration} totalCount={count} speed={speed} />
         })}
       </div>
       <input type="range" className="form-range" min={0} max={history.length - 1} value={index} step={1}
@@ -116,7 +81,7 @@ export function MergeSort() {
               <label htmlFor="reset-btn" className="form-label">
                 Regenerate
                 </label>
-              <button className="btn btn-outline-secondary w-auto" id="reset-btn"onClick={() => setHistory(mergeSort(generateNumbers(count)))}>
+              <button className="btn btn-outline-secondary w-auto" id="reset-btn" onClick={() => setTriggerRegen(!triggerRegen)}>
                 <i className="bi bi-arrow-clockwise" />
               </button>
             </div>

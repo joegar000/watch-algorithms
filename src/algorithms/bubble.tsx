@@ -1,17 +1,12 @@
 import { produce } from "immer";
-import { last } from "../../utilities/last";
+import { ColumnSortProps } from "../components/column";
+import { last } from "../utilities/last";
 
-export interface BubbleState {
-  value: number,
-  offset: number,
-  comparing: boolean
-}
-
-export function bubbleSort(arr: number[]): BubbleState[][] {
-  const bubbleStates: BubbleState[][] = [arr.map(v => ({
+export function bubbleSort(arr: number[]): ColumnSortProps[][] {
+  const bubbleStates: ColumnSortProps[][] = [arr.map(v => ({
     value: v,
     offset: 0,
-    comparing: false
+    background: 'bg-info'
   }))];
 
   for (let i = 0; i < arr.length - 1; i++) {
@@ -23,8 +18,8 @@ export function bubbleSort(arr: number[]): BubbleState[][] {
         const statesJ1 = last(bubbleStates).findIndex(s => s.value === arr[j + 1]);
 
         bubbleStates.push(produce(last(bubbleStates), draft => {
-          draft[statesJ].comparing = true;
-          draft[statesJ1].comparing = true;
+          draft[statesJ].background = 'bg-danger';
+          draft[statesJ1].background = 'bg-danger';
         }));
 
         bubbleStates.push(produce(last(bubbleStates), draft => {
@@ -33,8 +28,8 @@ export function bubbleSort(arr: number[]): BubbleState[][] {
         }));
 
         bubbleStates.push(produce(last(bubbleStates), draft => {
-          draft[statesJ].comparing = false;
-          draft[statesJ1].comparing = false;
+          draft[statesJ].background = 'bg-info';
+          draft[statesJ1].background = 'bg-info';
         }));
 
         const temp = arr[j];
