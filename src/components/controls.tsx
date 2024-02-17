@@ -17,6 +17,15 @@ export function SortControls(props: { stepDuration?: number, algorithm: (nums: n
   const stepDuration = props.stepDuration ?? 200;
 
   useEffect(() => {
+    const onclick = (e: MouseEvent) => {
+      if (!(e.target instanceof HTMLElement) || !e.target.closest('.settings-container'))
+        setSettingsOpen(false);
+    }
+    document.addEventListener("click", onclick);
+    return () => document.removeEventListener("click", onclick);
+  }, []);
+
+  useEffect(() => {
     if (playing) {
       const t = setTimeout(() => {
         if (index < history.length - 1)
